@@ -38,6 +38,8 @@ app.use('*', session)
 
 // OAuth configuration
 const REDIRECT_URI = "https://demo-mauthn.nullvijayawada.org/callback"
+// const REDIRECT_URI = "http://localhost:8787/callback"
+
 const AUTH_URL = "https://mauthn.mukham.in/oauth/authorize"
 const TOKEN_URL = "https://mauthn.mukham.in/oauth/token"
 const API_BASE_URL = "https://mauthn.mukham.in"
@@ -51,10 +53,49 @@ app.get('/', (c) => {
     <html>
       <head>
         <title>OAuth 2.0 Test Application: MAuthN Test</title>
+        <style>
+          body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+          }
+          h1 {
+            color: #bb86fc;
+            margin-bottom: 30px;
+            text-align: center;
+          }
+          a {
+            display: inline-block;
+            background-color: #3700b3;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.3s;
+          }
+          a:hover {
+            background-color: #6200ee;
+          }
+          .container {
+            max-width: 600px;
+            text-align: center;
+          }
+        </style>
       </head>
       <body>
-        <h1>OAuth 2.0 Test Application: MAuthN Test</h1>
-        <a href="/login">Login with OAuth Provider</a>
+        <div class="container">
+          <h1>OAuth 2.0 Test Application: MAuthN Test</h1>
+          <a href="/login">Login with OAuth Provider</a>
+        </div>
       </body>
     </html>
   `)
@@ -164,13 +205,64 @@ app.get('/profile', async (c) => {
     <html>
       <head>
         <title>User Profile</title>
+        <style>
+          body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+          h1 {
+            color: #bb86fc;
+            margin-bottom: 30px;
+          }
+          pre {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 4px;
+            overflow-x: auto;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+          }
+          .btn-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+          }
+          a {
+            background-color: #3700b3;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.3s;
+          }
+          a:hover {
+            background-color: #6200ee;
+          }
+          .container {
+            max-width: 800px;
+            width: 100%;
+          }
+        </style>
       </head>
       <body>
-        <h1>User Profile</h1>
-        <pre>${JSON.stringify(userInfo, null, 2)}</pre>
-        <a href="/profilepic">Profile pic</a>
-        <a href="/refresh">Refresh Token</a>
-        <a href="/logout">Logout</a>
+        <div class="container">
+          <h1>User Profile</h1>
+          <pre>${JSON.stringify(userInfo, null, 2)}</pre>
+          <div class="btn-container">
+            <a href="/profilepic">Profile pic</a>
+            <a href="/refresh">Refresh Token</a>
+            <a href="/logout">Logout</a>
+          </div>
+        </div>
       </body>
     </html>
   `)
@@ -206,14 +298,64 @@ app.get('/profilepic', async (c) => {
     <html>
       <head>
         <title>User Profile Picture</title>
+        <style>
+          body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+          h1 {
+            color: #bb86fc;
+            margin-bottom: 30px;
+          }
+          img {
+            max-width: 300px;
+            border-radius: 50%;
+            border: 3px solid #3700b3;
+            margin-bottom: 20px;
+          }
+          .btn-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+          }
+          a {
+            background-color: #3700b3;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.3s;
+          }
+          a:hover {
+            background-color: #6200ee;
+          }
+          .container {
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+          }
+        </style>
       </head>
       <body>
-        <h1>User Profile</h1>
-        <img src="data:image/png;base64, ${userInfo.image}" />
-        <br>
-        <a href="/profile">Profile details</a>
-        <a href="/refresh">Refresh Token</a>
-        <a href="/logout">Logout</a>
+        <div class="container">
+          <h1>User Profile Picture</h1>
+          <img src="data:image/png;base64, ${userInfo.image}" alt="Profile Picture" />
+          <div class="btn-container">
+            <a href="/profile">Profile details</a>
+            <a href="/refresh">Refresh Token</a>
+            <a href="/logout">Logout</a>
+          </div>
+        </div>
       </body>
     </html>
   `)
