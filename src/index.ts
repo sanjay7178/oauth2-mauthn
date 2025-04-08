@@ -199,7 +199,7 @@ app.get('/profile', async (c) => {
   
   const userInfo = await response.json()
   
-  // Display the user profile
+  // Display the user profile with token inspector
   return c.html(html`
     <!DOCTYPE html>
     <html>
@@ -217,9 +217,8 @@ app.get('/profile', async (c) => {
             flex-direction: column;
             align-items: center;
           }
-          h1 {
+          h1, h2, h3 {
             color: #bb86fc;
-            margin-bottom: 30px;
           }
           pre {
             background-color: #1e1e1e;
@@ -234,6 +233,8 @@ app.get('/profile', async (c) => {
             display: flex;
             gap: 10px;
             margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
           }
           a {
             background-color: #3700b3;
@@ -251,21 +252,246 @@ app.get('/profile', async (c) => {
             max-width: 800px;
             width: 100%;
           }
+          .jwt-section {
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid #333;
+          }
+          .jwt-part {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #252525;
+            border-radius: 4px;
+          }
+          .jwt-header {
+            border-left: 4px solid #03DAC6;
+          }
+          .jwt-payload {
+            border-left: 4px solid #bb86fc;
+          }
+          .jwt-signature {
+            border-left: 4px solid #CF6679;
+          }
+          .jwt-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px;
+            background-color: #252525;
+            border-radius: 4px;
+          }
+          .jwt-expiry {
+            color: ${accessToken.split('.').length === 3 ? '#03DAC6' : '#CF6679'};
+            font-weight: bold;
+          }
+          .tab {
+            cursor: pointer;
+            padding: 10px 20px;
+            background-color: #252525;
+            border-radius: 4px 4px 0 0;
+            margin-right: 5px;
+          }
+          .tab.active {
+            background-color: #3700b3;
+            color: white;
+          }
+          .tab-content {
+            display: none;
+          }
+          .tab-content.active {
+            display: block;
+          }
+          .token-info-box {
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #03DAC6;
+          }
+          .info-badge {
+            background-color: #3700b3;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-bottom: 10px;
+          }
         </style>
       </head>
       <body>
         <div class="container">
           <h1>User Profile</h1>
-          <pre>${JSON.stringify(userInfo, null, 2)}</pre>
+          
+          <div class="tabs">
+            <span class="tab active" onclick="openTab(event, 'profile-tab')">Profile</span>
+            <span class="tab" onclick="openTab(event, 'token-tab')">Access Token</span>
+          </div>
+          
+          <div id="profile-tab" class="tab-content active">
+            <pre>${JSON.stringify(userInfo, null, 2)}</pre>
+          </div>
+          
+          <div id="token-tab" class="tab-content">
+            <h2>Access Token Inspector</h2>
+            <div class="jwt-section">
+              <h3>Your Access Token</h3>
+              <pre>${accessToken}</pre>
+              
+              <div id="token-decoded">Loading...</div>
+            </div>
+          </div>
+          
           <div class="btn-container">
             <a href="/profilepic">Profile pic</a>
             <a href="/refresh">Refresh Token</a>
             <a href="/logout">Logout</a>
           </div>
         </div>
+        
+        <script>
+          function openTab(evt, tabName) {
+            const tabContents = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabContents.length; i++) {
+              tabContents[i].classList.remove("active");
+            }
+            
+            const tabs = document.getElementsByClassName("tab");
+            for (let i = 0; i < tabs.length; i++) {
+              tabs[i].classList.remove("active");
+            }
+            
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+          }
+          
+          // Simple function to detect and decode JWT token parts
+          function parseToken(token) {
+            // Check if token appears to be JWT (has two dots and three parts)
+            const parts = token.split('.');
+            if (parts.length !== 3) {
+              return { 
+                valid: false, 
+                isJwt: false,
+                message: "This is an opaque token, not a JWT token. Opaque tokens cannot be decoded client-side." 
+              };
+            }
+            
+            // Try to decode it as JWT
+            try {
+              // Base64Url decode
+              function urlDecode(str) {
+                // Add padding if needed
+                str = str.replace(/-/g, '+').replace(/_/g, '/');
+                while (str.length % 4) {
+                  str += '=';
+                }
+                try {
+                  return JSON.parse(decodeURIComponent(atob(str).split('').map(c =>
+                    '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+                  ).join('')));
+                } catch (e) {
+                  return { error: "Could not decode this part" };
+                }
+              }
+              
+              const header = urlDecode(parts[0]);
+              const payload = urlDecode(parts[1]);
+              
+              // Additional check: header should have alg and typ
+              if (!header.alg) {
+                return { 
+                  valid: false, 
+                  isJwt: false,
+                  message: "This appears to be formatted like a JWT but doesn't contain valid JWT header data." 
+                };
+              }
+              
+              return {
+                valid: true,
+                isJwt: true,
+                header,
+                payload,
+                signature: parts[2]
+              };
+            } catch (e) {
+              return { 
+                valid: false, 
+                isJwt: false,
+                message: "Error parsing JWT: " + e.message 
+              };
+            }
+          }
+          
+          // Display token information
+          function displayTokenInfo() {
+            const token = "${accessToken}";
+            const tokenInfo = parseToken(token);
+            
+            let html = '';
+            
+            if (!tokenInfo.isJwt) {
+              html = '<div class="token-info-box">' +
+                '<span class="info-badge">Opaque Token</span>' +
+                '<h3>Token Information</h3>' +
+                '<p>' + tokenInfo.message + '</p>' +
+                '<p>This token is still valid for authentication with the API, but its contents cannot be inspected client-side.</p>' +
+                '<p>Opaque tokens provide better security as they are reference tokens stored server-side.</p>' +
+                '</div>';
+            } else if (!tokenInfo.valid) {
+              html = '<div class="jwt-part"><h3>Invalid JWT Format</h3><p>' + tokenInfo.message + '</p></div>';
+            } else {
+              // Header
+              html += '<div class="jwt-part jwt-header"><h3>Header</h3><pre>' + 
+                JSON.stringify(tokenInfo.header, null, 2) + '</pre></div>';
+              
+              // Payload
+              html += '<div class="jwt-part jwt-payload"><h3>Payload</h3><pre>' + 
+                JSON.stringify(tokenInfo.payload, null, 2) + '</pre></div>';
+              
+              // Signature (truncated)
+              html += '<div class="jwt-part jwt-signature"><h3>Signature</h3><p>' + 
+                tokenInfo.signature.substring(0, 15) + '...' + '</p></div>';
+              
+              // Expiration info
+              if (tokenInfo.payload.exp) {
+                const exp = new Date(tokenInfo.payload.exp * 1000);
+                const now = new Date();
+                const isExpired = now > exp;
+                
+                html += '<div class="jwt-info"><span>Expiration:</span><span class="jwt-expiry" style="color: ' + 
+                  (isExpired ? '#CF6679' : '#03DAC6') + '">' +
+                  exp.toLocaleString() + (isExpired ? ' (EXPIRED)' : '') + '</span></div>';
+                  
+                if (!isExpired) {
+                  const diff = exp - now;
+                  const minutes = Math.floor(diff / 60000);
+                  html += '<div class="jwt-info"><span>Expires in:</span><span>' + 
+                    minutes + ' minutes</span></div>';
+                }
+              }
+              
+              // Issued at
+              if (tokenInfo.payload.iat) {
+                const iat = new Date(tokenInfo.payload.iat * 1000);
+                html += '<div class="jwt-info"><span>Issued at:</span><span>' + 
+                  iat.toLocaleString() + '</span></div>';
+              }
+            }
+            
+            document.getElementById('token-decoded').innerHTML = html;
+          }
+          
+          // Execute when page loads
+          window.onload = function() {
+            displayTokenInfo();
+          };
+        </script>
       </body>
     </html>
-  `)
+  `);
 })
 
 // Profile picture route
