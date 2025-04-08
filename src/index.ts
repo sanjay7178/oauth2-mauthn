@@ -38,7 +38,7 @@ app.use('*', session)
 
 // OAuth configuration
 const REDIRECT_URI = "https://demo-mauthn.nullvijayawada.org/callback"
-// const REDIRECT_URI = "http://localhost:8787/callback"
+// const REDIRECT_URI = "http://localhost:8787/callback"  // uncomment this for local testing
 
 const AUTH_URL = "https://mauthn.mukham.in/oauth/authorize"
 const TOKEN_URL = "https://mauthn.mukham.in/oauth/token"
