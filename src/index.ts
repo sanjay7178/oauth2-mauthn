@@ -43,7 +43,7 @@ const REDIRECT_URI = "https://demo-mauthn.nullvijayawada.org/callback"
 const AUTH_URL = "https://mauthn.mukham.in/oauth/authorize"
 const TOKEN_URL = "https://mauthn.mukham.in/oauth/token"
 const API_BASE_URL = "https://mauthn.mukham.in"
-const CLIENT_ID = "your_client_id"
+const CLIENT_ID = "mukham-test-app"
 const CLIENT_SECRET = "your_client_secret"
 
 // Home route
